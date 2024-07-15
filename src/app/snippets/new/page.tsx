@@ -1,47 +1,18 @@
-import { db } from "@/db/index";
-import { redirect } from "next/navigation";
+"use client";
+
+import * as actions from "@/actions";
+import { useFormState } from "react-dom";
 
 export default function NewSnippetPage() {
-  // FormData is an interface to easily construct a set of key/value pairs representing form fields and their values.
-  async function createSnippet(formData: FormData) {
-    // We explicitally write because it helps us to clarify the context in which a piece of code runs.
-    // Server Actions
-    "use server";
-
-    // Check the user's input is valid
-    // We assign the id - title in form element while designing
-    // in form we may submmit a file that's why 'const title: FormDataEntryValue | null'
-    // but we need a 'string' for now so we used 'as'
-
-    const title = formData.get("title") as string | null;
-    const code = formData.get("code") as string | null;
-
-    // Validate the title and code are not null or empty
-    if (!title) {
-      throw new Error("Title must not be null or empty");
-    }
-
-    if (!code) {
-      throw new Error("Code must not be null or empty");
-    }
-
-    // Create a new Record in the db
-    const snippet = await db.snippet.create({
-      data: {
-        title: title,
-        code: code,
-      },
-    });
-
-    // console.log(snippet);
-
-    // Redirect to home route
-    redirect("/");
-  }
+  // 1st Arg - Server Action Fxn we want to call whenever the form gets submitted
+  // 2nd Arg - Initial FormState
+  const [formState, updatedServerAction] = useFormState(actions.createSnippet, {
+    messege: "",
+  });
 
   return (
-    <div className="h-screen w-full flex items-center justify-center bg-zinc-900 text-white">
-      <form className="bg-zinc-100 p-4 rounded-lg" action={createSnippet}>
+    <div className="h-screen w-full flex items-center justify-center bg-zinc-900 ">
+      <form className="bg-zinc-100 p-4 rounded-lg" action={updatedServerAction}>
         {/* Title */}
         <h3 className="text-lg font-semibold mb-4 text-zinc-800 font-mono italic">
           Create a Snippet
@@ -71,6 +42,11 @@ export default function NewSnippetPage() {
             />
           </div>
         </div>
+
+        {formState.messege ? (
+          <div className="text-red-600">{formState.messege}*</div>
+        ) : null}
+
         {/* Button */}
         <div className="w-full flex items-center justify-center ">
           <button type="submit" className="p-2 bg-green-500 rounded-lg">
